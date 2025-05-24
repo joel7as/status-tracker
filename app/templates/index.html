@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Task Tracker</title>
+</head>
+<body>
+  <h1>Task Tracker</h1>
+
+  <form id="task-form">
+    <input type="text" id="task-title" placeholder="Enter new task" required />
+    <button type="submit">Add Task</button>
+  </form>
+
+  <ul id="tasks-list"></ul>
+
+  <script>
+    async function fetchTasks() {
+      const res = await fetch('/tasks');
+      const tasks = await res.json();
+      const list = document.getElementById('tasks-list');
+      list.innerHTML = '';
+      tasks.forEach(task => {
+        const li = document.createElement('li');
+        li.textContent = task.title + ' (added ' + new Date(task.created_at).toLocaleString() + ')';
+        
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Delete';
+        delBtn.onclick = async () => {
+          await fetch(`/tasks/${task.id}`, { method: 'DELETE' });
+          fetchTasks();
+        };
+
+        li.appendChild(delBtn);
+        list.appendChild(li);
+      });
+    }
+
+    document.getElementById('task-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const titleInput = document.getElementById('task-title');
+      await fetch('/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: titleInput.value })
+      });
+      titleInput.value = '';
+      fetchTasks();
+    };
+
+    fetchTasks();
+  </script>
+</body>
+</html>
